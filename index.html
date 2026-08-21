@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#ffffff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="AI修图">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon.png">
+    <title>AI 修图</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .phone-container {
+            width: 100%;
+            max-width: 400px;
+            height: 90vh;
+            max-height: 800px;
+            background: #ffffff;
+            border-radius: 32px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .image-preview {
+            flex: 1;
+            margin: 24px 24px 16px;
+            min-height: 0;
+            background: #f8f9fb;
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px dashed #e0e4e8;
+            position: relative;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        .image-preview:hover {
+            border-color: #c0c4c8;
+            background: #f0f2f5;
+        }
+
+        .image-preview.has-image {
+            border: none;
+            background: #000;
+        }
+
+        .add-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: #ffffff;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .add-icon::before,
+        .add-icon::after {
+            content: '';
+            position: absolute;
+            background: #9ca3af;
+            border-radius: 2px;
+        }
+
+        .add-icon::before {
+            width: 24px;
+            height: 3px;
+        }
+
+        .add-icon::after {
+            width: 3px;
+            height: 24px;
+        }
+
+        .preview-text {
+            color: #9ca3af;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .preview-image,
+        .result-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: none;
+        }
+
+        .bottom-section {
+            padding: 20px 24px 32px;
+            flex-shrink: 0;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 16px;
+            letter-spacing: 0.5px;
+        }
+
+        .style-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .style-item {
+            aspect-ratio: 1;
+            background: #f3f4f6;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #6b7280;
+            font-weight: 500;
+            text-align: center;
+            padding: 8px 4px;
+            position: relative;
+        }
+
+        .style-item:hover {
+            background: #e5e7eb;
+            transform: scale(1.02);
+        }
+
+        .style-item.selected {
+            background: #1f2937;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(31, 41, 55, 0.3);
+        }
+
+        .style-item .style-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 100%;
+        }
+
+        .style-item .delete-btn {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 20px;
+            height: 20px;
+            background: #ef4444;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: white;
+            line-height: 1;
+        }
+
+        .style-item:hover .delete-btn {
+            display: flex;
+        }
+
+        .style-item.add-style {
+            border: 2px dashed #d1d5db;
+            background: transparent;
+        }
+
+        .style-item.add-style:hover {
+            border-color: #9ca3af;
+            background: #f9fafb;
+        }
+
+        .add-style-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 4px;
+        }
+
+        .add-style-icon::before,
+        .add-style-icon::after {
+            content: '';
+            position: absolute;
+            background: #6b7280;
+            border-radius: 1px;
+        }
+
+        .add-style-icon::before {
+            width: 14px;
+            height: 2px;
+        }
+
+        .add-style-icon::after {
+            width: 2px;
+            height: 14px;
+        }
+
+        .generate-btn {
+            width: 100%;
+            padding: 16px;
+            background: #1f2937;
+            color: #ffffff;
+            border: none;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+            letter-spacing: 0.5px;
+        }
+
+        .generate-btn:hover {
+            background: #374151;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(31, 41, 55, 0.3);
+        }
+
+        .generate-btn:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            border-radius: 24px;
+            z-index: 10;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #f3f4f6;
+            border-top-color: #1f2937;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 16px;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 32px;
+            width: 100%;
+            max-width: 360px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .input-field:focus {
+            border-color: #1f2937;
+        }
+
+        .input-field::placeholder {
+            color: #9ca3af;
+        }
+
+        textarea.input-field {
+            min-height: 100px;
+            resize: none;
+            font-family: inherit;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .modal-btn.cancel {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .modal-btn.confirm {
+            background: #1f2937;
+            color: #ffffff;
+        }
+
+        .modal-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .download-btn {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            z-index: 5;
+        }
+
+        .download-btn.show {
+            display: flex;
+        }
+
+        .download-btn:hover {
+            background: #ffffff;
+            transform: scale(1.05);
+        }
+
+        .download-icon {
+            width: 18px;
+            height: 18px;
+            position: relative;
+        }
+
+        .download-icon::before {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 2px;
+            background: #6b7280;
+            top: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .download-icon::after {
+            content: '';
+            position: absolute;
+            width: 2px;
+            height: 8px;
+            background: #6b7280;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .download-arrow {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 5px solid #6b7280;
+        }
+
+        .settings-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            z-index: 5;
+        }
+
+        .settings-btn:hover {
+            background: #ffffff;
+            transform: scale(1.05);
+        }
+
+        .settings-icon {
+            width: 20px;
+            height: 20px;
+            position: relative;
+        }
+
+        .settings-icon::before {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #6b7280;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .settings-icon::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #6b7280;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        #fileInput {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1f2937;
+            color: #ffffff;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 200;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        @media (max-height: 700px) {
+            body {
+                padding: 10px;
+            }
+            .phone-container {
+                border-radius: 24px;
+            }
+            .image-preview {
+                margin: 16px 16px 12px;
+            }
+            .bottom-section {
+                padding: 16px 16px 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-container">
+        <div class="settings-btn" onclick="openSettings()">
+            <div class="settings-icon"></div>
+        </div>
+
+        <div class="image-preview" id="imagePreview" onclick="handlePreviewClick(event)">
+            <div class="download-btn" id="downloadBtn" onclick="downloadImage(event)">
+                <div class="download-icon">
+                    <div class="download-arrow"></div>
+                </div>
+            </div>
+            <div class="loading-overlay" id="loadingOverlay">
+                <div class="spinner"></div>
+                <div class="loading-text">生成中...</div>
+            </div>
+            <div class="add-icon" id="addIcon"></div>
+            <div class="preview-text" id="previewText">点击选择图片</div>
+            <img class="preview-image" id="previewImage" alt="预览图片">
+            <img class="result-image" id="resultImage" alt="生成结果">
+        </div>
+
+        <div class="bottom-section">
+            <div class="section-title">风格</div>
+            <div class="style-grid" id="styleGrid">
+                <div class="style-item add-style" onclick="openAddStyle()">
+                    <div class="add-style-icon"></div>
+                    <span>添加</span>
+                </div>
+            </div>
+            <button class="generate-btn" id="generateBtn" onclick="generateImage()">生成</button>
+        </div>
+
+        <input type="file" id="fileInput" accept="image/*" onchange="handleImageSelect(event)" style="display: none;">
+    </div>
+
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-title">API 设置</div>
+            <div class="input-group">
+                <label class="input-label">API Key</label>
+                <input type="password" class="input-field" id="apiKeyInput" placeholder="输入你的 API Key">
+            </div>
+            <div class="input-group">
+                <label class="input-label">Base URL</label>
+                <input type="text" class="input-field" id="baseUrlInput" placeholder="https://ph8.co/openai/v1" value="https://ph8.co/openai/v1">
+            </div>
+            <div class="input-group">
+                <label class="input-label">模型名称</label>
+                <input type="text" class="input-field" id="modelInput" placeholder="doubao-seedream-4-5-251128" value="doubao-seedream-4-5-251128">
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" onclick="closeSettings()">取消</button>
+                <button class="modal-btn confirm" onclick="saveSettings()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="addStyleModal">
+        <div class="modal-content">
+            <div class="modal-title">添加风格</div>
+            <div class="input-group">
+                <label class="input-label">风格名称</label>
+                <input type="text" class="input-field" id="styleNameInput" placeholder="例如：动漫风格">
+            </div>
+            <div class="input-group">
+                <label class="input-label">提示词</label>
+                <textarea class="input-field" id="stylePromptInput" placeholder="描述你想要的风格效果..."></textarea>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" onclick="closeAddStyle()">取消</button>
+                <button class="modal-btn confirm" onclick="saveStyle()">添加</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        let selectedImage = null;
+        let selectedStyleIndex = -1;
+        let styles = [];
+        let apiSettings = {
+            apiKey: '',
+            baseUrl: 'https://ph8.co/openai/v1',
+            model: 'doubao-seedream-4-5-251128'
+        };
+
+        function loadData() {
+            const savedSettings = localStorage.getItem('aiImageSettings');
+            const savedStyles = localStorage.getItem('aiImageStyles');
+            
+            if (savedSettings) {
+                apiSettings = JSON.parse(savedSettings);
+                document.getElementById('apiKeyInput').value = apiSettings.apiKey;
+                document.getElementById('baseUrlInput').value = apiSettings.baseUrl;
+                document.getElementById('modelInput').value = apiSettings.model;
+            }
+            
+            if (savedStyles) {
+                styles = JSON.parse(savedStyles);
+            }
+            
+            renderStyles();
+        }
+
+        function saveData() {
+            localStorage.setItem('aiImageSettings', JSON.stringify(apiSettings));
+            localStorage.setItem('aiImageStyles', JSON.stringify(styles));
+        }
+
+        function openSettings() {
+            document.getElementById('settingsModal').classList.add('active');
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+
+        function saveSettings() {
+            apiSettings.apiKey = document.getElementById('apiKeyInput').value;
+            apiSettings.baseUrl = document.getElementById('baseUrlInput').value;
+            apiSettings.model = document.getElementById('modelInput').value;
+            saveData();
+            closeSettings();
+            showToast('设置已保存');
+        }
+
+        function openAddStyle() {
+            document.getElementById('styleNameInput').value = '';
+            document.getElementById('stylePromptInput').value = '';
+            document.getElementById('addStyleModal').classList.add('active');
+        }
+
+        function closeAddStyle() {
+            document.getElementById('addStyleModal').classList.remove('active');
+        }
+
+        function saveStyle() {
+            const name = document.getElementById('styleNameInput').value.trim();
+            const prompt = document.getElementById('stylePromptInput').value.trim();
+            
+            if (!name) {
+                showToast('请输入风格名称');
+                return;
+            }
+            
+            if (!prompt) {
+                showToast('请输入提示词');
+                return;
+            }
+            
+            styles.push({ name, prompt });
+            saveData();
+            renderStyles();
+            closeAddStyle();
+            showToast('风格已添加');
+        }
+
+        function deleteStyle(index, event) {
+            event.stopPropagation();
+            styles.splice(index, 1);
+            if (selectedStyleIndex === index) {
+                selectedStyleIndex = -1;
+            } else if (selectedStyleIndex > index) {
+                selectedStyleIndex--;
+            }
+            saveData();
+            renderStyles();
+        }
+
+        function renderStyles() {
+            const grid = document.getElementById('styleGrid');
+            grid.innerHTML = '';
+            
+            styles.forEach((style, index) => {
+                const item = document.createElement('div');
+                item.className = 'style-item' + (selectedStyleIndex === index ? ' selected' : '');
+                item.onclick = () => selectStyle(index);
+                item.innerHTML = `
+                    <div class="delete-btn" onclick="deleteStyle(${index}, event)">×</div>
+                    <span class="style-name">${style.name}</span>
+                `;
+                grid.appendChild(item);
+            });
+            
+            const addItem = document.createElement('div');
+            addItem.className = 'style-item add-style';
+            addItem.onclick = openAddStyle;
+            addItem.innerHTML = `
+                <div class="add-style-icon"></div>
+                <span>添加</span>
+            `;
+            grid.appendChild(addItem);
+        }
+
+        function selectStyle(index) {
+            selectedStyleIndex = selectedStyleIndex === index ? -1 : index;
+            renderStyles();
+        }
+
+        function handlePreviewClick(event) {
+            if (event.target.closest('.download-btn')) {
+                return;
+            }
+            const fileInput = document.getElementById('fileInput');
+            fileInput.value = '';
+            setTimeout(() => {
+                fileInput.click();
+            }, 100);
+        }
+
+        function handleImageSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    selectedImage = e.target.result;
+                    const previewImage = document.getElementById('previewImage');
+                    previewImage.src = selectedImage;
+                    previewImage.style.display = 'block';
+                    document.getElementById('addIcon').style.display = 'none';
+                    document.getElementById('previewText').style.display = 'none';
+                    document.getElementById('imagePreview').classList.add('has-image');
+                    document.getElementById('resultImage').style.display = 'none';
+                    document.getElementById('downloadBtn').classList.remove('show');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        let currentResultUrl = null;
+
+        function downloadImage(event) {
+            event.stopPropagation();
+            if (!currentResultUrl) {
+                showToast('没有可下载的图片');
+                return;
+            }
+
+            const link = document.createElement('a');
+            link.href = currentResultUrl;
+            link.download = 'ai-image-' + Date.now() + '.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('开始下载');
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        async function generateImage() {
+            if (!apiSettings.apiKey) {
+                showToast('请先设置 API Key');
+                openSettings();
+                return;
+            }
+
+            if (!selectedImage) {
+                showToast('请先选择图片');
+                return;
+            }
+
+            if (selectedStyleIndex === -1) {
+                showToast('请选择风格');
+                return;
+            }
+
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const generateBtn = document.getElementById('generateBtn');
+
+            loadingOverlay.classList.add('active');
+            generateBtn.disabled = true;
+
+            try {
+                const stylePrompt = styles[selectedStyleIndex].prompt;
+
+                const requestBody = {
+                    model: apiSettings.model,
+                    prompt: stylePrompt,
+                    size: "2K",
+                    response_format: "url",
+                    extra_body: {
+                        image: [selectedImage],
+                        sequential_image_generation: "auto",
+                        sequential_image_generation_options: {
+                            max_images: 1
+                        },
+                        watermark: false
+                    }
+                };
+
+                const response = await fetch(`${apiSettings.baseUrl}/images/generations`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiSettings.apiKey}`
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const data = await response.json();
+
+                if (data.data && data.data[0]) {
+                    const resultImage = document.getElementById('resultImage');
+                    const imageUrl = data.data[0].url || `data:image/png;base64,${data.data[0].b64_json}`;
+                    resultImage.src = imageUrl;
+                    resultImage.style.display = 'block';
+                    document.getElementById('previewImage').style.display = 'none';
+                    document.getElementById('downloadBtn').classList.add('show');
+                    currentResultUrl = imageUrl;
+                    showToast('生成成功');
+                } else {
+                    showToast('生成失败，请重试');
+                    console.error('API Response:', data);
+                }
+            } catch (error) {
+                showToast('请求失败：' + error.message);
+                console.error('Error:', error);
+            } finally {
+                loadingOverlay.classList.remove('active');
+                generateBtn.disabled = false;
+            }
+        }
+
+        loadData();
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./service-worker.js');
+        }
+    </script>
+</body>
+</html>
