@@ -420,7 +420,7 @@
             transform: translateY(-1px);
         }
 
-        .share-btn {
+        .download-btn {
             position: absolute;
             top: 16px;
             left: 16px;
@@ -437,41 +437,53 @@
             z-index: 5;
         }
 
-        .share-btn.show {
+        .download-btn.show {
             display: flex;
         }
 
-        .share-btn:hover {
+        .download-btn:hover {
             background: #ffffff;
             transform: scale(1.05);
         }
 
-        .share-icon {
+        .download-icon {
             width: 18px;
             height: 18px;
             position: relative;
         }
 
-        .share-icon::before {
+        .download-icon::before {
             content: '';
             position: absolute;
-            width: 8px;
-            height: 8px;
-            border: 2px solid #6b7280;
-            border-radius: 50%;
-            top: 0;
-            right: 0;
-        }
-
-        .share-icon::after {
-            content: '';
-            position: absolute;
-            width: 6px;
+            width: 12px;
             height: 2px;
             background: #6b7280;
             top: 6px;
-            left: 0;
-            transform: rotate(-30deg);
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .download-icon::after {
+            content: '';
+            position: absolute;
+            width: 2px;
+            height: 8px;
+            background: #6b7280;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .download-arrow {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 5px solid #6b7280;
         }
 
         .settings-btn {
@@ -574,8 +586,10 @@
         </div>
 
         <div class="image-preview" id="imagePreview" onclick="handlePreviewClick(event)">
-            <div class="share-btn" id="shareBtn" onclick="shareImage(event)">
-                <div class="share-icon"></div>
+            <div class="download-btn" id="downloadBtn" onclick="downloadImage(event)">
+                <div class="download-icon">
+                    <div class="download-arrow"></div>
+                </div>
             </div>
             <div class="loading-overlay" id="loadingOverlay">
                 <div class="spinner"></div>
@@ -810,7 +824,7 @@
         }
 
         function handlePreviewClick(event) {
-            if (event.target.closest('.share-btn')) {
+            if (event.target.closest('.download-btn')) {
                 return;
             }
             const fileInput = document.getElementById('fileInput');
@@ -833,7 +847,7 @@
                     document.getElementById('previewText').style.display = 'none';
                     document.getElementById('imagePreview').classList.add('has-image');
                     document.getElementById('resultImage').style.display = 'none';
-                    document.getElementById('shareBtn').classList.remove('show');
+                    document.getElementById('downloadBtn').classList.remove('show');
                 };
                 reader.readAsDataURL(file);
             }
@@ -841,43 +855,20 @@
 
         let currentResultUrl = null;
 
-        async function shareImage(event) {
+        function downloadImage(event) {
             event.stopPropagation();
             if (!currentResultUrl) {
-                showToast('没有可分享的图片');
+                showToast('没有可下载的图片');
                 return;
             }
 
-            try {
-                const response = await fetch(currentResultUrl);
-                const blob = await response.blob();
-                const file = new File([blob], 'ai-image.png', { type: 'image/png' });
-
-                if (navigator.share && navigator.canShare({ files: [file] })) {
-                    await navigator.share({
-                        files: [file]
-                    });
-                    showToast('分享成功');
-                } else {
-                    const link = document.createElement('a');
-                    link.href = currentResultUrl;
-                    link.download = 'ai-image-' + Date.now() + '.png';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    showToast('已下载图片');
-                }
-            } catch (err) {
-                if (err.name !== 'AbortError') {
-                    const link = document.createElement('a');
-                    link.href = currentResultUrl;
-                    link.download = 'ai-image-' + Date.now() + '.png';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    showToast('已下载图片');
-                }
-            }
+            const link = document.createElement('a');
+            link.href = currentResultUrl;
+            link.download = 'ai-image-' + Date.now() + '.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('开始下载');
         }
 
         function showToast(message) {
@@ -947,7 +938,7 @@
                     resultImage.src = imageUrl;
                     resultImage.style.display = 'block';
                     document.getElementById('previewImage').style.display = 'none';
-                    document.getElementById('shareBtn').classList.add('show');
+                    document.getElementById('downloadBtn').classList.add('show');
                     currentResultUrl = imageUrl;
                     showToast('生成成功');
                 } else {
