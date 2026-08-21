@@ -229,6 +229,29 @@
             height: 14px;
         }
 
+        .import-btn {
+            grid-column: span 2;
+            aspect-ratio: auto;
+            height: 48px;
+            background: #f3f4f6;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            color: #6b7280;
+            font-weight: 500;
+            gap: 6px;
+            border: 2px dashed #d1d5db;
+        }
+
+        .import-btn:hover {
+            border-color: #9ca3af;
+            background: #f9fafb;
+        }
+
         .generate-btn {
             width: 100%;
             padding: 16px;
@@ -590,6 +613,7 @@
         </div>
 
         <input type="file" id="fileInput" accept="image/*" onchange="handleImageSelect(event)" style="display: none;">
+        <input type="file" id="txtFileInput" accept=".txt" onchange="handleTxtImport(event)" style="display: none;">
     </div>
 
     <div class="modal" id="settingsModal">
@@ -751,6 +775,38 @@
                 <span>添加</span>
             `;
             grid.appendChild(addItem);
+
+            const importItem = document.createElement('div');
+            importItem.className = 'import-btn';
+            importItem.onclick = () => document.getElementById('txtFileInput').click();
+            importItem.innerHTML = `
+                <span>📄</span>
+                <span>导入TXT</span>
+            `;
+            grid.appendChild(importItem);
+        }
+
+        function handleTxtImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result.trim();
+                const name = file.name.replace(/\.txt$/i, '');
+                
+                if (!content) {
+                    showToast('文件内容为空');
+                    return;
+                }
+                
+                styles.push({ name, prompt: content });
+                saveData();
+                renderStyles();
+                showToast(`已导入风格：${name}`);
+            };
+            reader.readAsText(file);
+            event.target.value = '';
         }
 
         function selectStyle(index) {
