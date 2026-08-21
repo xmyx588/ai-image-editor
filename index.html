@@ -661,7 +661,16 @@
     <script>
         let selectedImage = null;
         let selectedStyleIndex = -1;
-        let styles = [];
+        let styles = [
+            {
+                name: '电影感丁达尔',
+                prompt: '电影级写实摄影质感，真实世界物理光影，低饱和高级纪实色调，游戏CG风格 极具艺术感 震撼人心 背景压暗 暗部叠加 特写镜头高清  背景动态虚化 阳光灿烂 暖色丁达尔发丝光 光影交错 面部亮度合理 特写镜头 低饱和 光线逻辑符合真实世界 保证人物表情不变 姿势不变 构图角度不变 原比例'
+            },
+            {
+                name: '人物调整',
+                prompt: '把脸P好看，窄脸、缩颧骨、缩短中庭，缩短人中，缩小鼻翼，平整光滑的皮肤，流畅的脸型，不要改变妆容，不要改变其他任何元素'
+            }
+        ];
         let apiSettings = {
             apiKey: 'sk-1c92ab0cedca4686bf7f2475df8975cb',
             baseUrl: 'https://ph8.co/openai/v1',
