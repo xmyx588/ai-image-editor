@@ -650,10 +650,11 @@
             
             if (savedSettings) {
                 apiSettings = JSON.parse(savedSettings);
-                document.getElementById('apiKeyInput').value = apiSettings.apiKey;
-                document.getElementById('baseUrlInput').value = apiSettings.baseUrl;
-                document.getElementById('modelInput').value = apiSettings.model;
             }
+            
+            document.getElementById('apiKeyInput').value = apiSettings.apiKey;
+            document.getElementById('baseUrlInput').value = apiSettings.baseUrl;
+            document.getElementById('modelInput').value = apiSettings.model;
             
             if (savedStyles) {
                 styles = JSON.parse(savedStyles);
