@@ -625,11 +625,11 @@
             </div>
             <div class="input-group">
                 <label class="input-label">Base URL</label>
-                <input type="text" class="input-field" id="baseUrlInput" placeholder="https://wellai.cc/openai/v1" value="https://wellai.cc/openai/v1">
+                <input type="text" class="input-field" id="baseUrlInput" placeholder="https://ph8.co/openai/v1" value="https://ph8.co/openai/v1">
             </div>
             <div class="input-group">
                 <label class="input-label">模型名称</label>
-                <input type="text" class="input-field" id="modelInput" placeholder="Nano-Banana-Pro2" value="Nano-Banana-Pro2">
+                <input type="text" class="input-field" id="modelInput" placeholder="doubao-seedream-4-5-251128" value="doubao-seedream-4-5-251128">
             </div>
             <div class="modal-buttons">
                 <button class="modal-btn cancel" onclick="closeSettings()">取消</button>
@@ -668,9 +668,9 @@
             }
         ];
         let apiSettings = {
-            apiKey: 'sk-4efd601aaa884e03840e96277129801f',
-            baseUrl: 'https://wellai.cc/openai/v1',
-            model: 'Nano-Banana-Pro2'
+            apiKey: 'sk-1c92ab0cedca4686bf7f2475df8975cb',
+            baseUrl: 'https://ph8.co/openai/v1',
+            model: 'doubao-seedream-4-5-251128'
         };
 
         function loadData() {
@@ -905,15 +905,15 @@
                 const requestBody = {
                     model: apiSettings.model,
                     prompt: stylePrompt,
+                    size: "2K",
                     response_format: "url",
-                    advance: {
-                        ratio: "1:1",
-                        watermark: false,
-                        reference_images: {
-                            normal_reference_images: [
-                                { image: selectedImage }
-                            ]
-                        }
+                    extra_body: {
+                        image: [selectedImage],
+                        sequential_image_generation: "auto",
+                        sequential_image_generation_options: {
+                            max_images: 1
+                        },
+                        watermark: false
                     }
                 };
 
